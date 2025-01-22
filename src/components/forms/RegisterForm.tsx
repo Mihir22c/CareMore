@@ -195,7 +195,39 @@ export default function RegisterForm({ user }: { user: User }) {
                     </CustomFormField>
 
 
-                    <div className='flex flex-col gap-6 xl:flex-row'></div>
+                    <div className='flex flex-col gap-6 xl:flex-row'>
+                        <CustomFormField
+                            fieldType={FormFieldType.INPUT}
+                            control={form.control}
+                            name="insuranceProvider"
+                            label="Insurance Provider"
+                            placeholder="Blue Cross Blue Shield"
+                        />
+                        <CustomFormField
+                            fieldType={FormFieldType.INPUT}
+                            control={form.control}
+                            name="insurancePolicyNumber"
+                            label="Insurance Policy Number"
+                            placeholder="ABC123456789"
+                        />
+                    </div>
+
+                    <div className='flex flex-col gap-6 xl:flex-row'>
+                        <CustomFormField
+                            fieldType={FormFieldType.TEXT_AREA}
+                            control={form.control}
+                            name="allergies"
+                            label="Allergies(if any)"
+                            placeholder="Peanuts, Penicillin, Pollen, etc."
+                        />
+                        <CustomFormField
+                            fieldType={FormFieldType.TEXT_AREA}
+                            control={form.control}
+                            name="currentMedications"
+                            label="Current Medications"
+                            placeholder="Ibuprofen 200mg, Levothyroxine 50mcg"
+                        />
+                    </div>
                 </section>
                 <SubmitButton isLoading={isLoading}>Get Started</SubmitButton>
             </form>

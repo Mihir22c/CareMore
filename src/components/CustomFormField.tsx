@@ -59,6 +59,12 @@ const RenderField = ({ field, props }: { field: any, props: CustomProps }) => {
                     </FormControl>
                 </div>
             )
+        case FormFieldType.TEXTAREA:
+            return (
+                <FormControl>
+                    <Textarea
+                    </FormControl>
+            )
         case FormFieldType.PHONE_INPUT:
             return (
                 <FormControl>
