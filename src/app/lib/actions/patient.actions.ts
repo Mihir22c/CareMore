@@ -1,7 +1,6 @@
 "use server"
-
 import { ID, Query } from "node-appwrite"
-import { users } from "../appwrite.config"
+import { BUCKET_ID, databases, DATABASE_ID, ENDPOINT, PATIENT_COLLECTION_ID, storage, users, PROJECT_ID } from "../appwrite.config"
 import { parseStringify } from "../utils";
 import { InputFile } from "node-appwrite/file"
 
@@ -43,10 +42,25 @@ export const registerPatient = async ({ identificationDocument, ...patient }: Re
 
         if (identificationDocument) {
             const inputFile = InputFile.fromBuffer(
-                identificationDocument?.get("blobFile") as Blob,
-                identificationDocument?.get("fileName") as string,
+                identificationDocument?.identificationDocument?.get("blobFile") as Blob,
+                identificationDocument?.identificationDocument?.get("fileName") as string,
             )
+
+            file = await storage.createFile(BUCKET_ID!, ID.unique(), inputFile)
         }
+
+        // create new patient document 
+        const newPatient = await databases.createDocument(
+            DATABASE_ID!,
+            PATIENT_COLLECTION_ID!,
+            ID.unique(),
+            {
+                identificationDocumentId: file?.$id || null,
+                identificationDocumentUrl: `${ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${file?.$id}/view?project=${PROJECT_ID}`,
+                ...patient
+            }
+        )
+        return parseStringify(newPatient)
     } catch (error) {
         console.error("An error occurred while registering patient:", error);
 

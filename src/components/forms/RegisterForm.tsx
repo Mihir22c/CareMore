@@ -10,7 +10,7 @@ import CustomFormField from '../CustomFormField'
 import SubmitButton from '../SubmitButton'
 import { PatientFormValidation } from '@/app/lib/validation'
 import { useRouter } from 'next/navigation'
-import { createUser } from '@/app/lib/actions/patient.actions'
+import { createUser, registerPatient } from '@/app/lib/actions/patient.actions'
 import { FormFieldType } from './PatientForm'
 import { RadioGroup, RadioGroupItem } from '../ui/radio-group'
 import { Doctors, GenderOptions, IdentificationTypes, PatientFormDefaultValues } from '@/constants'
@@ -27,6 +27,7 @@ const formSchema = z.object({
 export default function RegisterForm({ user }: { user: User }) {
     const router = useRouter()
     const [isLoading, setIsLoading] = useState(false)
+
     const form = useForm<z.infer<typeof PatientFormValidation>>({
         resolver: zodResolver(PatientFormValidation),
         defaultValues: {
@@ -42,29 +43,39 @@ export default function RegisterForm({ user }: { user: User }) {
 
         let formData
 
-        if (values.identificationDocument && values.identificationDocument.length > 0) {
-            const blobFile = new Blob([values.identificationDocument[0]], { type: values.identificationDocument[0].type })
+        if (values.identificationDocument && values.identificationDocument?.length > 0) {
+
+            const blobFile = new Blob([values.identificationDocument[0]], {
+                type: values.identificationDocument[0].type
+            })
 
             formData = new FormData()
-            formData.append("blobFile", blobFile)
-            formData.append("fileName", values.identificationDocument[0].type)
+            // formData.append("blobFile", blobFile)
+            // formData.append("fileName", values.identificationDocument[0].name)
+            formData = {
+                "blobFile": blobFile,
+                "fileName": values.identificationDocument[0].name
+            }
         }
+
         try {
             const patientData = {
                 ...values,
                 userId: user.$id,
                 birthDate: new Date(values.birthDate),
-                identificationDocument: formData,
+                identificationDocument: formData
             }
 
-            const patient = await registerPatient(patientData)
+            // ignore ts error
+            // @ts-ignore
+            const newPatient = await registerPatient(patientData)
 
-            if (patient) router.push(`/patients/${user.$id}/new-appointment`)
+            if (newPatient) router.push(`/patients/${user.$id}/new-appointment`)
 
         } catch (error) {
             console.log(error);
-
         }
+        setIsLoading(false);
     }
 
 
