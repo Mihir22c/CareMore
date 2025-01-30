@@ -4,7 +4,7 @@ import Link from 'next/link'
 import React from 'react'
 import { getRecentAppointmentList } from '../lib/actions/appointment.action'
 import { DataTable } from '@/components/DataTable'
-import { columns, Payment } from '@/components/table/columns'
+import { columns } from '@/components/table/columns'
 
 
 

@@ -9,6 +9,7 @@ interface SubmitButtonProps {
 }
 
 const SubmitButton = (props: SubmitButtonProps) => {
+
     const { isLoading, className, children } = props
     return (
         <Button type='submit' disabled={isLoading} className={className ?? 'shad-primary-btn w-full'}>
@@ -25,7 +26,7 @@ const SubmitButton = (props: SubmitButtonProps) => {
                         Loading...
                     </div>
                 )
-                    : children
+                    : (children)
             }
         </Button>
     )

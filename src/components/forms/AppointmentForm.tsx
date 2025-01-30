@@ -14,11 +14,8 @@ import { createUser, getPatient } from '@/app/lib/actions/patient.actions'
 import { Doctors } from '@/constants'
 import { SelectItem } from '../ui/select'
 import Image from 'next/image'
-import { createAppointment } from '@/app/lib/actions/appointment.action'
-
-const formSchema = z.object({
-    username: z.string().min(2, { message: "Username must be at least 2 characters." }).max(25),
-})
+import { createAppointment, updateAppointment } from '@/app/lib/actions/appointment.action'
+import { Appointment } from '@/types/appwrite.types'
 
 export enum FormFieldType {
     INPUT = 'input',
@@ -28,39 +25,48 @@ export enum FormFieldType {
     DATE_PICKER = 'datePicker',
     SELECT = 'select',
     SKELETON = 'skeleton',
-
 }
 
-export default function AppointmentForm({ userId, patientId, type }: { userId: string, patientId: string, type: "create" | "cancel" | "schedule" }) {
+export default function AppointmentForm({ userId, patientId, type, appointment, setOpen }:
+    {
+        userId: string,
+        patientId: string,
+        type: "create" | "schedule" | "cancel"
+        appointment?: Appointment,
+        setOpen?: (open: boolean) => void,
+    }) {
+
 
     const router = useRouter()
     const [isLoading, setIsLoading] = useState(false)
     const AppointmentFormValidation = getAppointmentSchema(type);
+
     const form = useForm<z.infer<typeof AppointmentFormValidation>>({
         resolver: zodResolver(AppointmentFormValidation),
         defaultValues: {
-            primaryPhysician: "",
-            schedule: new Date(),
-            reason: "",
-            note: "",
-            cancellationReason: ""
+            primaryPhysician: appointment ? appointment.primaryPhysician : '',
+            schedule: appointment ? new Date(appointment.schedule) : new Date(Date.now()),
+            reason: appointment ? appointment?.reason : "",
+            note: appointment ? appointment?.note : "",
+            cancellationReason: appointment?.cancellationReason || ""
         },
     })
 
     async function onSubmit(values: z.infer<typeof AppointmentFormValidation>) {
+        console.log("TYPE", { type }, "values", values);
+
+        console.log("I am submitting");
+
         setIsLoading(true)
 
         let status
 
         switch (type) {
-            case 'cancel':
-                status = "cancelled"
-                break;
-            case 'create':
-                status = "pending"
-                break;
             case 'schedule':
                 status = "scheduled"
+                break;
+            case 'cancel':
+                status = "cancelled"
                 break;
             default:
                 status = "pending"
@@ -80,47 +86,67 @@ export default function AppointmentForm({ userId, patientId, type }: { userId: s
 
                 }
 
-                console.log("appointmentData", appointmentData); //TODO: remove this line
-
-
                 const appointment = await createAppointment(appointmentData)
-                console.log("appointment", appointment); //TODO: remove this line
-
-
 
                 if (appointment) router.push(`/patients/${userId}/new-appointment/success?appointmentId=${appointment.$id}`)
+            } else {
+                console.log("I am here HERE", type);
+
+                const appointmentToUpdate = {
+                    userId,
+                    appointmentId: appointment?.$id!,
+                    appointment: {
+                        primaryPhysician: values?.primaryPhysician,
+                        schedule: new Date(values?.schedule),
+                        status: status as Status,
+                        cancellationReason: values?.cancellationReason
+                    },
+                    type
+                }
+
+                console.log("APPOINTMENT TO UPDATE", appointmentToUpdate);
+
+
+                const updatedAppointment = await updateAppointment(appointmentToUpdate)
+                console.log("UPDATED APPOINTMENT", updatedAppointment);
+
+
+                if (updatedAppointment) {
+                    setOpen && setOpen(false)
+                    form.reset()
+                }
             }
         } catch (error) {
             console.log(error);
-
         }
+        setIsLoading(false)
     }
 
     let buttonLabel
-
     switch (type) {
         case 'cancel':
             buttonLabel = "Cancel Appointment"
-            break;
-        case 'create':
-            buttonLabel = "Create Appointment"
             break;
         case 'schedule':
             buttonLabel = "Schedule Appointment"
             break;
         default:
-            break;
+            buttonLabel = "Submit Appointment";
     }
 
-
-
     return (
+
         <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="flex-1 space-y-6">
-                <section className='mb-12 space-y-4'>
+            <form
+                onSubmit={form.handleSubmit(onSubmit)}
+                className="flex-1 space-y-6">
+
+                {type === "create" && <section className='mb-12 space-y-4'>
+
                     <h1 className='header'>New Appointment</h1>
                     <p className='text-dark-700'>Request a new appointment in 10 seconds.</p>
                 </section>
+                }
 
                 {type !== "cancel" && (
                     <>
@@ -182,7 +208,12 @@ export default function AppointmentForm({ userId, patientId, type }: { userId: s
                         placeholder="Enter reason for cancellation" />
                 )}
 
-                <SubmitButton isLoading={isLoading} className={`${type === "cancel" ? "shad-danger-btn" : "shad-primary-btn"} w-full`}>{buttonLabel}</SubmitButton>
+                <SubmitButton
+                    isLoading={isLoading}
+                    className={`${type === "cancel" ? "shad-danger-btn" : "shad-primary-btn"} w-full`}
+                >
+                    {buttonLabel}
+                </SubmitButton>
             </form>
         </Form>
     )
