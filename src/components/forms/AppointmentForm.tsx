@@ -141,11 +141,11 @@ export default function AppointmentForm({ userId, patientId, type, appointment, 
                 onSubmit={form.handleSubmit(onSubmit)}
                 className="flex-1 space-y-6">
 
-                {type === "create" && <section className='mb-12 space-y-4'>
+                {type === "create" && (<section className='mb-12 space-y-4'>
 
                     <h1 className='header'>New Appointment</h1>
                     <p className='text-dark-700'>Request a new appointment in 10 seconds.</p>
-                </section>
+                </section>)
                 }
 
                 {type !== "cancel" && (
@@ -203,7 +203,7 @@ export default function AppointmentForm({ userId, patientId, type, appointment, 
                     <CustomFormField
                         fieldType={FormFieldType.TEXTAREA}
                         control={form.control}
-                        name="reason"
+                        name="cancellationReason"
                         label="Reason for cancellation"
                         placeholder="Enter reason for cancellation" />
                 )}
